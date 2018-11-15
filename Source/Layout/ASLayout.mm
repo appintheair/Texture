@@ -2,21 +2,14 @@
 //  ASLayout.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <AsyncDisplayKit/ASLayout.h>
 
+#import <atomic>
 #import <queue>
 
 #import <AsyncDisplayKit/ASCollections.h>
@@ -27,7 +20,6 @@
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASObjectDescriptionHelpers.h>
-#import <AsyncDisplayKit/ASRectMap.h>
 
 CGPoint const ASPointNull = {NAN, NAN};
 
@@ -59,20 +51,8 @@ ASDISPLAYNODE_INLINE AS_WARN_UNUSED_RESULT BOOL ASLayoutIsDisplayNodeType(ASLayo
 @interface ASLayout () <ASDescriptionProvider>
 {
   ASLayoutElementType _layoutElementType;
+  std::atomic_bool _retainSublayoutElements;
 }
-
-/*
- * Caches all sublayouts if set to YES or destroys the sublayout cache if set to NO. Defaults to NO
- */
-@property (nonatomic) BOOL retainSublayoutLayoutElements;
-
-/**
- * Array for explicitly retain sublayout layout elements in case they are created and references in layoutSpecThatFits: and no one else will hold a strong reference on it
- */
-@property (nonatomic) NSMutableArray<id<ASLayoutElement>> *sublayoutLayoutElements;
-
-@property (nonatomic, readonly) ASRectMap *elementToRectMap;
-
 @end
 
 @implementation ASLayout
@@ -100,7 +80,7 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
   
   self = [super init];
   if (self) {
-#if DEBUG
+#if ASDISPLAYNODE_ASSERTIONS_ENABLED
     for (ASLayout *sublayout in sublayouts) {
       ASDisplayNodeAssert(ASPointIsNull(sublayout.position) == NO, @"Invalid position is not allowed in sublayout.");
     }
@@ -112,7 +92,7 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
     _layoutElementType = layoutElement.layoutElementType;
     
     if (!ASIsCGSizeValidForSize(size)) {
-      ASDisplayNodeAssert(NO, @"layoutSize is invalid and unsafe to provide to Core Animation! Release configurations will force to 0, 0.  Size = %@, node = %@", NSStringFromCGSize(size), layoutElement);
+      ASDisplayNodeFailAssert(@"layoutSize is invalid and unsafe to provide to Core Animation! Release configurations will force to 0, 0.  Size = %@, node = %@", NSStringFromCGSize(size), layoutElement);
       size = CGSizeZero;
     } else {
       size = CGSizeMake(ASCeilPixelValue(size.width), ASCeilPixelValue(size.height));
@@ -125,25 +105,14 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
       _position = position;
     }
 
-    _sublayouts = sublayouts != nil ? [sublayouts copy] : @[];
-
-    if (_sublayouts.count > 0) {
-      _elementToRectMap = [ASRectMap rectMapForWeakObjectPointers];
-      for (ASLayout *layout in sublayouts) {
-        [_elementToRectMap setRect:layout.frame forKey:layout.layoutElement];
-      }
-    }
+    _sublayouts = [sublayouts copy] ?: @[];
     
-    self.retainSublayoutLayoutElements = [ASLayout shouldRetainSublayoutLayoutElements];
+    if ([ASLayout shouldRetainSublayoutLayoutElements]) {
+      [self retainSublayoutElements];
+    }
   }
   
   return self;
-}
-
-- (instancetype)init
-{
-  ASDisplayNodeAssert(NO, @"Use the designated initializer");
-  return [self init];
 }
 
 #pragma mark - Class Constructors
@@ -177,25 +146,29 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
                             sublayouts:nil];
 }
 
-#pragma mark - Sublayout Elements Caching
-
-- (void)setRetainSublayoutLayoutElements:(BOOL)retainSublayoutLayoutElements
+- (void)dealloc
 {
-  if (_retainSublayoutLayoutElements != retainSublayoutLayoutElements) {
-    _retainSublayoutLayoutElements = retainSublayoutLayoutElements;
-    
-    if (retainSublayoutLayoutElements == NO) {
-      _sublayoutLayoutElements = nil;
-    } else {
-      // Add sublayouts layout elements to an internal array to retain it while the layout lives
-      NSUInteger sublayoutCount = _sublayouts.count;
-      if (sublayoutCount > 0) {
-        _sublayoutLayoutElements = [NSMutableArray arrayWithCapacity:sublayoutCount];
-        for (ASLayout *sublayout in _sublayouts) {
-          [_sublayoutLayoutElements addObject:sublayout.layoutElement];
-        }
+  if (_retainSublayoutElements.load()) {
+    for (ASLayout *sublayout in _sublayouts) {
+      // We retained this, so there's no risk of it deallocating on us.
+      if (let cfElement = (__bridge CFTypeRef)sublayout->_layoutElement) {
+        CFRelease(cfElement);
       }
     }
+  }
+}
+
+#pragma mark - Sublayout Elements Caching
+
+- (void)retainSublayoutElements
+{
+  if (_retainSublayoutElements.exchange(true)) {
+    return;
+  }
+  
+  for (ASLayout *sublayout in _sublayouts) {
+    // CFBridgingRetain atomically casts and retains. We need the atomicity.
+    CFBridgingRetain(sublayout->_layoutElement);
   }
 }
 
@@ -220,9 +193,8 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
 - (ASLayout *)filteredNodeLayoutTree NS_RETURNS_RETAINED
 {
   if ([self isFlattened]) {
-    // All flattened layouts must have this flag enabled
-    // to ensure sublayout elements are retained until the layouts are applied.
-    self.retainSublayoutLayoutElements = YES;
+    // All flattened layouts must retain sublayout elements until they are applied.
+    [self retainSublayoutElements];
     return self;
   }
   
@@ -251,10 +223,10 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
     if (ASLayoutIsDisplayNodeType(layout)) {
       if (sublayoutsCount > 0 || CGPointEqualToPoint(ASCeilPointValues(absolutePosition), layout.position) == NO) {
         // Only create a new layout if the existing one can't be reused, which means it has either some sublayouts or an invalid absolute position.
-        auto newLayout = [ASLayout layoutWithLayoutElement:layout->_layoutElement
-                                                      size:layout.size
-                                                  position:absolutePosition
-                                                sublayouts:@[]];
+        let newLayout = [ASLayout layoutWithLayoutElement:layout->_layoutElement
+                                                     size:layout.size
+                                                 position:absolutePosition
+                                               sublayouts:@[]];
         flattenedSublayouts.push_back(newLayout);
       } else {
         flattenedSublayouts.push_back(layout);
@@ -273,9 +245,8 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
   // flattenedSublayouts is now all nils.
   
   ASLayout *layout = [ASLayout layoutWithLayoutElement:_layoutElement size:_size sublayouts:array];
-  // All flattened layouts must have this flag enabled
-  // to ensure sublayout elements are retained until the layouts are applied.
-  layout.retainSublayoutLayoutElements = YES;
+  // All flattened layouts must retain sublayout elements until they are applied.
+  [layout retainSublayoutElements];
   return layout;
 }
 
@@ -283,6 +254,8 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
 
 - (BOOL)isEqual:(id)object
 {
+  if (self == object) return YES;
+
   ASLayout *layout = ASDynamicCast(object, ASLayout);
   if (layout == nil) {
     return NO;
@@ -310,7 +283,12 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
 
 - (CGRect)frameForElement:(id<ASLayoutElement>)layoutElement
 {
-  return _elementToRectMap ? [_elementToRectMap rectForKey:layoutElement] : CGRectNull;
+  for (ASLayout *l in _sublayouts) {
+    if (l->_layoutElement == layoutElement) {
+      return l.frame;
+    }
+  }
+  return CGRectNull;
 }
 
 - (CGRect)frame
@@ -348,11 +326,11 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
   NSMutableArray *result = [NSMutableArray array];
   [result addObject:@{ @"size" : [NSValue valueWithCGSize:self.size] }];
 
-  if (auto layoutElement = self.layoutElement) {
+  if (let layoutElement = self.layoutElement) {
     [result addObject:@{ @"layoutElement" : layoutElement }];
   }
 
-  auto pos = self.position;
+  let pos = self.position;
   if (!ASPointIsNull(pos)) {
     [result addObject:@{ @"position" : [NSValue valueWithCGPoint:pos] }];
   }
@@ -385,7 +363,7 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
 
 ASLayout *ASCalculateLayout(id<ASLayoutElement> layoutElement, const ASSizeRange sizeRange, const CGSize parentSize)
 {
-  ASDisplayNodeCAssertNotNil(layoutElement, @"Not valid layoutElement passed in.");
+  NSCParameterAssert(layoutElement != nil);
   
   return [layoutElement layoutThatFits:sizeRange parentSize:parentSize];
 }

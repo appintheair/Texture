@@ -2,23 +2,36 @@
 //  ASBaseDefines.h
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
-#import <Foundation/NSObjCRuntime.h>
+#import <Foundation/Foundation.h>
 
 #define AS_EXTERN FOUNDATION_EXTERN
 #define unowned __unsafe_unretained
+
+// TODO: Remove these now that we're all-C++.
+#if defined(__cplusplus)
+# define var auto
+# define let const auto
+#else
+# define var __auto_type
+# define let const __auto_type
+#endif
+
+/**
+ * Hack to support building for iOS with Xcode 9. UIUserInterfaceStyle was previously tvOS-only,
+ * and it was added to iOS 12. Xcode 9 (iOS 11 SDK) will flat-out refuse to build anything that
+ * references this enum targeting iOS, even if it's guarded with the right availability macros,
+ * because it thinks the entire platform isn't compatible with the enum.
+ */
+#if TARGET_OS_TV || (defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0)
+#define AS_BUILD_UIUSERINTERFACESTYLE 1
+#else
+#define AS_BUILD_UIUSERINTERFACESTYLE 0
+#endif
 
 #ifdef __GNUC__
 # define ASDISPLAYNODE_GNUC(major, minor) \
@@ -227,5 +240,20 @@
     } \
     __result = [NSArray arrayByTransferring:__buf count:__i]; \
   } \
+  __result; \
+})
+
+/**
+ * Capture-and-clear a strong reference without the intervening retain/release pair.
+ *
+ * E.g. let localVar = ASTransferStrong(_myIvar);
+ * Post-condition: localVar has the strong value from _myIvar and _myIvar is nil.
+ * No retain/release is emitted when the optimizer is on.
+ */
+#define ASTransferStrong(lvalue) ({ \
+  CFTypeRef *__rawPtr = (CFTypeRef *)(void *)(&(lvalue)); \
+  CFTypeRef __cfValue = *__rawPtr; \
+  *__rawPtr = NULL; \
+  __typeof(lvalue) __result = (__bridge_transfer __typeof(lvalue))__cfValue; \
   __result; \
 })

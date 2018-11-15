@@ -2,17 +2,9 @@
 //  ASTextKitFontSizeAdjuster.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 
@@ -87,8 +79,6 @@
       paragraphStyle.tailIndent = (paragraphStyle.tailIndent * scaleFactor);
       paragraphStyle.minimumLineHeight = (paragraphStyle.minimumLineHeight * scaleFactor);
       paragraphStyle.maximumLineHeight = (paragraphStyle.maximumLineHeight * scaleFactor);
-      paragraphStyle.lineHeightMultiple = (paragraphStyle.lineHeightMultiple * scaleFactor);
-      paragraphStyle.paragraphSpacing = (paragraphStyle.paragraphSpacing * scaleFactor);
       
       [attrString removeAttribute:NSParagraphStyleAttributeName range:range];
       [attrString addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:range];
@@ -193,8 +183,8 @@
     
     // check to see if we may need to shrink for any of these things
     BOOL longestWordFits = [longestWordNeedingResize length] ? NO : YES;
-    BOOL maxLinesFits = _attributes.maximumNumberOfLines > 0 ? NO : YES;
-    BOOL heightFits = isinf(_constrainedSize.height) ? YES : NO;
+    BOOL maxLinesFits = self->_attributes.maximumNumberOfLines > 0 ? NO : YES;
+    BOOL heightFits = isinf(self->_constrainedSize.height) ? YES : NO;
 
     CGSize longestWordSize = CGSizeZero;
     if (longestWordFits == NO) {
@@ -214,7 +204,7 @@
       
       if (longestWordFits == NO) {
         // we need to check the longest word to make sure it fits
-        longestWordFits = std::ceil((longestWordSize.width * adjustedScale)  <= _constrainedSize.width);
+        longestWordFits = std::ceil((longestWordSize.width * adjustedScale) <= self->_constrainedSize.width);
       }
       
       // if the longest word fits, go ahead and check max line and height. If it didn't fit continue to the next scale factor
@@ -226,14 +216,14 @@
         
         // check to see if this scaled string fit in the max lines
         if (maxLinesFits == NO) {
-          maxLinesFits = ([self lineCountForString:scaledString] <= _attributes.maximumNumberOfLines);
+          maxLinesFits = ([self lineCountForString:scaledString] <= self->_attributes.maximumNumberOfLines);
         }
         
         // if max lines still doesn't fit, continue without checking that we fit in the constrained height
         if (maxLinesFits == YES && heightFits == NO) {
           // max lines fit so make sure that we fit in the constrained height.
           CGSize stringSize = [self boundingBoxForString:scaledString];
-          heightFits = (stringSize.height <= _constrainedSize.height);
+          heightFits = (stringSize.height <= self->_constrainedSize.height);
         }
       }
     }
