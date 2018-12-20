@@ -268,12 +268,12 @@
 
 - (void)calculateLayoutFromYogaRoot:(ASSizeRange)rootConstrainedSize
 {
-  ASDisplayNode *yogaParent = self.yogaParent;
+  ASDisplayNode *yogaRoot = self.yogaRoot;
 
-  if (yogaParent) {
+  if (self != yogaRoot) {
     ASYogaLog("ESCALATING to Yoga root: %@", self);
     // TODO(appleguy): Consider how to get the constrainedSize for the yogaRoot when escalating manually.
-    [yogaParent calculateLayoutFromYogaRoot:ASSizeRangeUnconstrained];
+    [yogaRoot calculateLayoutFromYogaRoot:ASSizeRangeUnconstrained];
     return;
   }
 
@@ -347,6 +347,22 @@
     });
   }
 #endif /* YOGA_LAYOUT_LOGGING */
+}
+
+@end
+
+@implementation ASDisplayNode (YogaDebugging)
+
+- (NSString *)yogaTreeDescription {
+  return [self _yogaTreeDescription:@""];
+}
+
+- (NSString *)_yogaTreeDescription:(NSString *)indent {
+  auto subtree = [NSMutableString stringWithFormat:@"%@%@\n", indent, self.description];
+  for (ASDisplayNode *n in self.yogaChildren) {
+    [subtree appendString:[n _yogaTreeDescription:[indent stringByAppendingString:@"| "]]];
+  }
+  return subtree;
 }
 
 @end

@@ -7,14 +7,19 @@
 //
 
 #import <XCTest/XCTest.h>
+
+#import <AsyncDisplayKit/ASAvailability.h>
+#import <AsyncDisplayKit/ASConfiguration.h>
+#import <AsyncDisplayKit/ASConfigurationDelegate.h>
+#import <AsyncDisplayKit/ASConfigurationInternal.h>
+
 #import "ASTestCase.h"
-#import "ASConfiguration.h"
-#import "ASConfigurationDelegate.h"
-#import "ASConfigurationInternal.h"
 
 static ASExperimentalFeatures features[] = {
   ASExperimentalGraphicsContexts,
+#if AS_ENABLE_TEXTNODE
   ASExperimentalTextNode,
+#endif
   ASExperimentalInterfaceStateCoalescing,
   ASExperimentalUnfairLock,
   ASExperimentalLayerDefaults,
@@ -22,7 +27,8 @@ static ASExperimentalFeatures features[] = {
   ASExperimentalCollectionTeardown,
   ASExperimentalFramesetterCache,
   ASExperimentalClearDataDuringDeallocation,
-  ASExperimentalDidEnterPreloadSkipASMLayout
+  ASExperimentalDidEnterPreloadSkipASMLayout,
+  ASExperimentalDisableAccessibilityCache
 };
 
 @interface ASConfigurationTests : ASTestCase <ASConfigurationDelegate>
@@ -45,6 +51,7 @@ static ASExperimentalFeatures features[] = {
     @"exp_framesetter_cache",
     @"exp_clear_data_during_deallocation",
     @"exp_did_enter_preload_skip_asm_layout",
+    @"exp_disable_a11y_cache"
   ];
 }
 
@@ -55,6 +62,8 @@ static ASExperimentalFeatures features[] = {
   }
   return allFeatures;
 }
+
+#if AS_ENABLE_TEXTNODE
 
 - (void)testExperimentalFeatureConfig
 {
@@ -80,6 +89,8 @@ static ASExperimentalFeatures features[] = {
   // But we should get another callback.
   [self waitForExpectationsWithTimeout:3 handler:nil];
 }
+
+#endif
 
 - (void)textureDidActivateExperimentalFeatures:(ASExperimentalFeatures)feature
 {
