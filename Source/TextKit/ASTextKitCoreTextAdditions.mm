@@ -68,15 +68,16 @@ NSDictionary *NSAttributedStringAttributesForCoreTextAttributes(NSDictionary *co
 
     // kCTFontAttributeName -> NSFontAttributeName
     if ([coreTextKey isEqualToString:(NSString *)kCTFontAttributeName]) {
+      ///TODO waiting for iOS fix
       CTFontRef coreTextFont = (__bridge CTFontRef)coreTextValue;
-      NSString *fontName = (__bridge_transfer NSString *)CTFontCopyPostScriptName(coreTextFont);
+      //      NSString *fontName = (__bridge_transfer NSString *)CTFontCopyPostScriptName(coreTextFont);
       CGFloat fontSize = CTFontGetSize(coreTextFont);
-      UIFont *font = [UIFont fontWithName:fontName size:fontSize];
-      ASDisplayNodeCAssertNotNil(font, @"unable to load font %@ with size %f", fontName, fontSize);
-      if (font == nil) {
-        // Gracefully fail if we were unable to load the font.
-        font = [UIFont systemFontOfSize:fontSize];
-      }
+      UIFont *font = [UIFont systemFontOfSize:fontSize];
+      //      ASDisplayNodeCAssertNotNil(font, @"unable to load font %@ with size %f", fontName, fontSize);
+      //      if (font == nil) {
+      //        // Gracefully fail if we were unable to load the font.
+      //        font = [UIFont systemFontOfSize:fontSize];
+      //      }
       cleanAttributes[NSFontAttributeName] = font;
     }
     // kCTKernAttributeName -> NSKernAttributeName
