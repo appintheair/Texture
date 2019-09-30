@@ -16,9 +16,7 @@
 
 #import <AsyncDisplayKit/AsyncDisplayKit.h>
 #import <AsyncDisplayKit/ASDefaultPlaybackButton.h>
-#import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASDisplayNodeInternal.h>
-#import <AsyncDisplayKit/ASThread.h>
 
 static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
@@ -286,7 +284,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
       
       {
         ASUnlockScope(self);
-        for (var subnode : subnodes) {
+        for (ASDisplayNode *subnode : subnodes) {
           [self addSubnode:subnode];
         }
       }
@@ -339,7 +337,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createPlaybackButton
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_playbackButtonNode == nil) {
     _playbackButtonNode = [[ASDefaultPlaybackButton alloc] init];
@@ -367,7 +365,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createFullScreenButton
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_fullScreenButtonNode == nil) {
     _fullScreenButtonNode = [[ASButtonNode alloc] init];
@@ -389,7 +387,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createElapsedTextField
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_elapsedTextNode == nil) {
     _elapsedTextNode = [[ASTextNode alloc] init];
@@ -407,7 +405,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createDurationTextField
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_durationTextNode == nil) {
     _durationTextNode = [[ASTextNode alloc] init];
@@ -426,7 +424,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createScrubber
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_scrubberNode == nil) {
     __weak __typeof__(self) weakSelf = self;
@@ -474,7 +472,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
 
 - (void)_locked_createControlFlexGrowSpacer
 {
-  ASAssertLocked(__instanceLock__);
+  DISABLED_ASAssertLocked(__instanceLock__);
   
   if (_controlFlexGrowSpacerSpec == nil) {
     _controlFlexGrowSpacerSpec = [[ASStackLayoutSpec alloc] init];
@@ -661,7 +659,7 @@ static void *ASVideoPlayerNodeContext = &ASVideoPlayerNodeContext;
     }];
     _spinnerNode.style.preferredSize = CGSizeMake(44.0, 44.0);
     
-    let spinnerNode = _spinnerNode;
+    const auto spinnerNode = _spinnerNode;
     {
       ASUnlockScope(self);
       [self addSubnode:spinnerNode];
