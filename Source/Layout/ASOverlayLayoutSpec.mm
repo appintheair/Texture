@@ -9,7 +9,6 @@
 
 #import <AsyncDisplayKit/ASOverlayLayoutSpec.h>
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
-#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASCollections.h>
 
 static NSUInteger const kUnderlayChildIndex = 0;
@@ -81,7 +80,7 @@ static NSUInteger const kOverlayChildIndex = 1;
     rawSublayouts[i++] = overlayLayout;
   }
   
-  let sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
+  const auto sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
   return [ASLayout layoutWithLayoutElement:self size:contentsLayout.size sublayouts:sublayouts];
 }
 
