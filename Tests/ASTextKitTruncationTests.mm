@@ -42,7 +42,6 @@
   CGSize constrainedSize = CGSizeMake(100, 50);
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                    lineBreakMode:NSLineBreakByWordWrapping
                                                             maximumNumberOfLines:0
                                                                   exclusionPaths:nil
@@ -65,7 +64,6 @@
   CGSize constrainedSize = CGSizeMake(100, 60);
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                    lineBreakMode:NSLineBreakByWordWrapping
                                                             maximumNumberOfLines:0
                                                                   exclusionPaths:nil
@@ -89,7 +87,6 @@
   CGSize constrainedSize = CGSizeMake(100, 50);
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                    lineBreakMode:NSLineBreakByWordWrapping
                                                             maximumNumberOfLines:0
                                                                   exclusionPaths:nil
@@ -112,7 +109,6 @@
   CGSize constrainedSize = CGSizeMake(50, 50);
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                    lineBreakMode:NSLineBreakByCharWrapping
                                                             maximumNumberOfLines:0
                                                                   exclusionPaths:nil
@@ -136,7 +132,6 @@
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                  lineBreakMode:NSLineBreakByWordWrapping
                                                           maximumNumberOfLines:0
                                                                 exclusionPaths:nil
@@ -154,7 +149,6 @@
   CGSize constrainedSize = CGSizeMake(50, 0);
   NSAttributedString *attributedString = [self _sentenceAttributedString];
   ASTextKitContext *context = [[ASTextKitContext alloc] initWithAttributedString:attributedString
-                                                                       tintColor:nil
                                                                    lineBreakMode:NSLineBreakByCharWrapping
                                                             maximumNumberOfLines:0
                                                                   exclusionPaths:nil

@@ -11,6 +11,7 @@
 
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
 
+#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASCollections.h>
 
 static NSUInteger const kForegroundChildIndex = 0;
@@ -60,7 +61,7 @@ static NSUInteger const kBackgroundChildIndex = 1;
   contentsLayout.position = CGPointZero;
   rawSublayouts[i++] = contentsLayout;
 
-  const auto sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
+  let sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
   return [ASLayout layoutWithLayoutElement:self size:contentsLayout.size sublayouts:sublayouts];
 }
 

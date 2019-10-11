@@ -45,11 +45,6 @@
   [_tableNode reloadData];
 }
 
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-  return UIStatusBarStyleLightContent;
-}
-
 - (void)generateFeedData
 {
   _videoFeedData = [[NSMutableArray alloc] init];
@@ -71,12 +66,12 @@
   return _videoFeedData.count;
 }
 
-- (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (ASCellNode *)tableNode:(ASTableNode *)tableNode nodeForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   VideoModel *videoObject = [_videoFeedData objectAtIndex:indexPath.row];
-  return ^{
-    VideoContentCell *cellNode = [[VideoContentCell alloc] initWithVideoObject:videoObject];
-    return cellNode;
-  };
+  VideoContentCell *cellNode = [[VideoContentCell alloc] initWithVideoObject:videoObject];
+  
+  return cellNode;
 }
 
 @end

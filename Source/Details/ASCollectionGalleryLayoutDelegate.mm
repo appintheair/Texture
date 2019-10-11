@@ -10,6 +10,7 @@
 
 #import <AsyncDisplayKit/_ASCollectionGalleryLayoutInfo.h>
 #import <AsyncDisplayKit/_ASCollectionGalleryLayoutItem.h>
+#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASCellNode.h>
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASCollections.h>
@@ -18,6 +19,7 @@
 #import <AsyncDisplayKit/ASCollectionLayoutState.h>
 #import <AsyncDisplayKit/ASElementMap.h>
 #import <AsyncDisplayKit/ASLayout.h>
+#import <AsyncDisplayKit/ASLayoutRangeType.h>
 #import <AsyncDisplayKit/ASInsetLayoutSpec.h>
 #import <AsyncDisplayKit/ASStackLayoutSpec.h>
 

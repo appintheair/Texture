@@ -14,7 +14,13 @@
 
 #import <AsyncDisplayKit/ASCollections.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
+#import <AsyncDisplayKit/ASTraitCollection.h>
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
+#import <AsyncDisplayKit/ASInternalHelpers.h>
+
+#import <objc/runtime.h>
+#import <map>
+#import <vector>
 
 @implementation ASLayoutSpec
 
@@ -56,7 +62,7 @@
 
 - (ASLayoutElementStyle *)style
 {
-  AS::MutexLocker l(__instanceLock__);
+  ASDN::MutexLocker l(__instanceLock__);
   if (_style == nil) {
     _style = [[ASLayoutElementStyle alloc] init];
   }
@@ -127,7 +133,7 @@ ASLayoutElementLayoutCalculationDefaults
 
 #pragma mark - NSFastEnumeration
 
-- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id unowned _Nullable [_Nonnull])buffer count:(NSUInteger)len
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id __unsafe_unretained _Nullable [_Nonnull])buffer count:(NSUInteger)len
 {
   return [_childrenArray countByEnumeratingWithState:state objects:buffer count:len];
 }
@@ -136,21 +142,11 @@ ASLayoutElementLayoutCalculationDefaults
 
 - (ASTraitCollection *)asyncTraitCollection
 {
-  AS::MutexLocker l(__instanceLock__);
+  ASDN::MutexLocker l(__instanceLock__);
   return [ASTraitCollection traitCollectionWithASPrimitiveTraitCollection:self.primitiveTraitCollection];
 }
 
-- (ASPrimitiveTraitCollection)primitiveTraitCollection
-{
-  AS::MutexLocker l(__instanceLock__);
-  return _primitiveTraitCollection;
-}
-
-- (void)setPrimitiveTraitCollection:(ASPrimitiveTraitCollection)traitCollection
-{
-  AS::MutexLocker l(__instanceLock__);
-  _primitiveTraitCollection = traitCollection;
-}
+ASPrimitiveTraitCollectionDefaults
 
 #pragma mark - ASLayoutElementStyleExtensibility
 
@@ -160,10 +156,10 @@ ASLayoutElementStyleExtensibilityForwarding
 
 - (NSMutableArray<NSDictionary *> *)propertiesForDescription
 {
-  const auto result = [NSMutableArray<NSDictionary *> array];
+  let result = [NSMutableArray<NSDictionary *> array];
   if (NSArray *children = self.children) {
     // Use tiny descriptions because these trees can get nested very deep.
-    const auto tinyDescriptions = ASArrayByFlatMapping(children, id object, ASObjectDescriptionMakeTiny(object));
+    let tinyDescriptions = ASArrayByFlatMapping(children, id object, ASObjectDescriptionMakeTiny(object));
     [result addObject:@{ @"children": tinyDescriptions }];
   }
   return result;
@@ -225,13 +221,13 @@ ASLayoutElementStyleExtensibilityForwarding
 
 - (NSString *)debugName
 {
-  AS::MutexLocker l(__instanceLock__);
+  ASDN::MutexLocker l(__instanceLock__);
   return _debugName;
 }
 
 - (void)setDebugName:(NSString *)debugName
 {
-  AS::MutexLocker l(__instanceLock__);
+  ASDN::MutexLocker l(__instanceLock__);
   if (!ASObjectIsEqual(_debugName, debugName)) {
     _debugName = [debugName copy];
   }
@@ -293,7 +289,7 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__)
 - (ASLayout *)calculateLayoutThatFits:(ASSizeRange)constrainedSize
 {
   NSArray *children = self.children;
-  const auto count = children.count;
+  let count = children.count;
   ASLayout *rawSublayouts[count];
   int i = 0;
   
@@ -307,7 +303,7 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__)
     
     rawSublayouts[i++] = sublayout;
   }
-  const auto sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
+  let sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
   return [ASLayout layoutWithLayoutElement:self size:size sublayouts:sublayouts];
 }
 

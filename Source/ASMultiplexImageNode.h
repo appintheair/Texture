@@ -9,14 +9,7 @@
 
 #import <AsyncDisplayKit/ASImageNode.h>
 #import <AsyncDisplayKit/ASImageProtocols.h>
-
-#if AS_USE_PHOTOS
 #import <Photos/Photos.h>
-#else
-@class PHAsset;
-@class PHImageManager;
-@class PHImageRequestOptions;
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -132,11 +125,10 @@ typedef NS_ENUM(NSUInteger, ASMultiplexImageNodeErrorCode) {
 
 /**
  * @abstract The image manager that this image node should use when requesting images from the Photos framework. If this is `nil` (the default), then `PHImageManager.defaultManager` is used.
-
+ 
  * @see `+[NSURL URLWithAssetLocalIdentifier:targetSize:contentMode:options:]` below.
  */
 @property (nullable, nonatomic) PHImageManager *imageManager API_AVAILABLE(ios(8.0), tvos(10.0));
-
 @end
 
 
@@ -257,9 +249,6 @@ didFinishDownloadingImageWithIdentifier:(ASImageIdentifier)imageIdentifier
 @end
 
 #pragma mark -
-
-#if AS_USE_PHOTOS
-
 @interface NSURL (ASPhotosFrameworkURLs)
 
 /**
@@ -276,7 +265,5 @@ didFinishDownloadingImageWithIdentifier:(ASImageIdentifier)imageIdentifier
                                options:(PHImageRequestOptions *)options NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT API_AVAILABLE(ios(8.0), tvos(10.0));
 
 @end
-
-#endif
 
 NS_ASSUME_NONNULL_END

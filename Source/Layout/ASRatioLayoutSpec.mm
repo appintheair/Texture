@@ -15,6 +15,7 @@
 
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
 
+#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 
 #pragma mark - ASRatioLayoutSpec
@@ -74,7 +75,7 @@
   }
 
   // Choose the size closest to the desired ratio.
-  const auto &bestSize = std::max_element(sizeOptions.begin(), sizeOptions.end(), [&](const CGSize &a, const CGSize &b){
+  let &bestSize = std::max_element(sizeOptions.begin(), sizeOptions.end(), [&](const CGSize &a, const CGSize &b){
     return std::fabs((a.height / a.width) - _ratio) > std::fabs((b.height / b.width) - _ratio);
   });
 

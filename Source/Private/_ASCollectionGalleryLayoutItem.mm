@@ -10,15 +10,13 @@
 
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASLayout.h>
+#import <AsyncDisplayKit/ASLayoutElementPrivate.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
 #import <AsyncDisplayKit/ASLayoutSpec.h>
 
-@interface _ASGalleryLayoutItem ()
-@property ASPrimitiveTraitCollection primitiveTraitCollection;
-
-@end
-
-@implementation _ASGalleryLayoutItem
+@implementation _ASGalleryLayoutItem {
+  std::atomic<ASPrimitiveTraitCollection> _primitiveTraitCollection;
+}
 
 @synthesize style;
 
@@ -35,6 +33,7 @@
 }
 
 ASLayoutElementStyleExtensibilityForwarding
+ASPrimitiveTraitCollectionDefaults
 
 - (ASTraitCollection *)asyncTraitCollection
 {

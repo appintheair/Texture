@@ -9,6 +9,8 @@
 
 #import <AsyncDisplayKit/ASCenterLayoutSpec.h>
 
+#import <AsyncDisplayKit/ASLayout.h>
+
 @implementation ASCenterLayoutSpec
 {
   ASCenterLayoutSpecCenteringOptions _centeringOptions;

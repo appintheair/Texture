@@ -9,6 +9,7 @@
 #import <AsyncDisplayKit/ASCollectionLayoutContext.h>
 #import <AsyncDisplayKit/ASCollectionLayoutContext+Private.h>
 
+#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASCollectionLayoutDelegate.h>
 #import <AsyncDisplayKit/ASCollectionLayoutCache.h>
 #import <AsyncDisplayKit/ASElementMap.h>

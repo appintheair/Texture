@@ -100,20 +100,17 @@ static const NSInteger kMaxLitterSize = 100;        // max number of kitten cell
   return 1 + _kittenDataSource.count;
 }
 
-- (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (ASCellNode *)tableNode:(ASTableNode *)tableNode nodeForRowAtIndexPath:(NSIndexPath *)indexPath
+{
   // special-case the first row
   if ([_blurbNodeIndexPath compare:indexPath] == NSOrderedSame) {
-    return ^{
-      BlurbNode *node = [[BlurbNode alloc] init];
-      return node;
-    };
+    BlurbNode *node = [[BlurbNode alloc] init];
+    return node;
   }
 
   NSValue *size = _kittenDataSource[indexPath.row - 1];
-  return ^{
-    KittenNode *node = [[KittenNode alloc] initWithKittenOfSize:size.CGSizeValue];
-    return node;
-  };
+  KittenNode *node = [[KittenNode alloc] initWithKittenOfSize:size.CGSizeValue];
+  return node;
 }
 
 - (void)tableNode:(ASTableNode *)tableNode didSelectRowAtIndexPath:(NSIndexPath *)indexPath

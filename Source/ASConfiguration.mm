@@ -7,6 +7,7 @@
 //
 
 #import <AsyncDisplayKit/ASConfiguration.h>
+#import <AsyncDisplayKit/ASConfigurationInternal.h>
 
 /// Not too performance-sensitive here.
 
@@ -16,8 +17,8 @@
 {
   if (self = [super init]) {
     if (dictionary != nil) {
-      const auto featureStrings = ASDynamicCast(dictionary[@"experimental_features"], NSArray);
-      const auto version = ASDynamicCast(dictionary[@"version"], NSNumber).integerValue;
+      let featureStrings = ASDynamicCast(dictionary[@"experimental_features"], NSArray);
+      let version = ASDynamicCast(dictionary[@"version"], NSNumber).integerValue;
       if (version != ASConfigurationSchemaCurrentVersion) {
         NSLog(@"Texture warning: configuration schema is old version (%ld vs %ld)", (long)version, (long)ASConfigurationSchemaCurrentVersion);
       }

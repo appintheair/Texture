@@ -13,13 +13,13 @@
 #import <queue>
 
 #import <AsyncDisplayKit/ASCollections.h>
+#import <AsyncDisplayKit/ASDimension.h>
 #import <AsyncDisplayKit/ASLayoutSpecUtilities.h>
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
 
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
-
-NSString *const ASThreadDictMaxConstraintSizeKey = @"kASThreadDictMaxConstraintSizeKey";
+#import <AsyncDisplayKit/ASObjectDescriptionHelpers.h>
 
 CGPoint const ASPointNull = {NAN, NAN};
 
@@ -151,7 +151,7 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
   if (_retainSublayoutElements.load()) {
     for (ASLayout *sublayout in _sublayouts) {
       // We retained this, so there's no risk of it deallocating on us.
-      if (CFTypeRef cfElement = (__bridge CFTypeRef)sublayout->_layoutElement) {
+      if (let cfElement = (__bridge CFTypeRef)sublayout->_layoutElement) {
         CFRelease(cfElement);
       }
     }
@@ -223,7 +223,7 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
     if (ASLayoutIsDisplayNodeType(layout)) {
       if (sublayoutsCount > 0 || CGPointEqualToPoint(ASCeilPointValues(absolutePosition), layout.position) == NO) {
         // Only create a new layout if the existing one can't be reused, which means it has either some sublayouts or an invalid absolute position.
-        const auto newLayout = [ASLayout layoutWithLayoutElement:layout->_layoutElement
+        let newLayout = [ASLayout layoutWithLayoutElement:layout->_layoutElement
                                                      size:layout.size
                                                  position:absolutePosition
                                                sublayouts:@[]];
@@ -326,11 +326,11 @@ static std::atomic_bool static_retainsSublayoutLayoutElements = ATOMIC_VAR_INIT(
   NSMutableArray *result = [NSMutableArray array];
   [result addObject:@{ @"size" : [NSValue valueWithCGSize:self.size] }];
 
-  if (id<ASLayoutElement> layoutElement = self.layoutElement) {
+  if (let layoutElement = self.layoutElement) {
     [result addObject:@{ @"layoutElement" : layoutElement }];
   }
 
-  const auto pos = self.position;
+  let pos = self.position;
   if (!ASPointIsNull(pos)) {
     [result addObject:@{ @"position" : [NSValue valueWithCGPoint:pos] }];
   }

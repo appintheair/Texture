@@ -13,6 +13,8 @@
 
 #import <AsyncDisplayKit/IGListAdapter+AsyncDisplayKit.h>
 #import <AsyncDisplayKit/ASIGListAdapterBasedDataSource.h>
+#import <AsyncDisplayKit/ASAssert.h>
+#import <objc/runtime.h>
 
 @implementation IGListAdapter (AsyncDisplayKit)
 

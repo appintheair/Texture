@@ -9,6 +9,7 @@
 #import "ASIntegerMap.h"
 #import <AsyncDisplayKit/ASAssert.h>
 #import <unordered_map>
+#import <AsyncDisplayKit/NSIndexSet+ASHelpers.h>
 #import <AsyncDisplayKit/ASObjectDescriptionHelpers.h>
 
 /**
@@ -97,7 +98,7 @@
     return NSNotFound;
   }
 
-  const auto result = _map.find(key);
+  let result = _map.find(key);
   return result != _map.end() ? result->second : NSNotFound;
 }
 
@@ -117,9 +118,9 @@
     return self;
   }
 
-  const auto result = [[ASIntegerMap alloc] init];
+  let result = [[ASIntegerMap alloc] init];
   
-  for (const auto &e : _map) {
+  for (let &e : _map) {
     result->_map[e.second] = e.first;
   }
   return result;
@@ -133,7 +134,7 @@
     return self;
   }
 
-  const auto newMap = [[ASIntegerMap allocWithZone:zone] init];
+  let newMap = [[ASIntegerMap allocWithZone:zone] init];
   newMap->_map = _map;
   return newMap;
 }
@@ -151,7 +152,7 @@
   } else {
     // { 1->2 3->4 5->6 }
     NSMutableString *str = [NSMutableString string];
-    for (const auto &e : _map) {
+    for (let &e : _map) {
       [str appendFormat:@" %ld->%ld", (long)e.first, (long)e.second];
     }
     // Remove leading space
@@ -175,7 +176,7 @@
     return YES;
   }
 
-  if (ASIntegerMap *otherMap = ASDynamicCast(object, ASIntegerMap)) {
+  if (let otherMap = ASDynamicCast(object, ASIntegerMap)) {
     return otherMap->_map == _map;
   }
   return NO;

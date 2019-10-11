@@ -13,6 +13,7 @@
 #if AS_ENABLE_TEXTNODE
 
 #import <tgmath.h>
+#import <mutex>
 
 #import <AsyncDisplayKit/ASLayoutManager.h>
 #import <AsyncDisplayKit/ASTextKitContext.h>
@@ -32,7 +33,7 @@
   ASTextKitAttributes _attributes;
   BOOL _measured;
   CGFloat _scaleFactor;
-  AS::Mutex __instanceLock__;
+  ASDN::Mutex __instanceLock__;
 }
 
 @synthesize sizingLayoutManager = _sizingLayoutManager;
@@ -126,7 +127,7 @@
 
 - (NSLayoutManager *)sizingLayoutManager
 {
-  AS::MutexLocker l(__instanceLock__);
+  ASDN::MutexLocker l(__instanceLock__);
   if (_sizingLayoutManager == nil) {
     _sizingLayoutManager = [[ASLayoutManager alloc] init];
     _sizingLayoutManager.usesFontLeading = NO;

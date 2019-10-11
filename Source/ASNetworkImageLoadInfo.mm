@@ -7,6 +7,7 @@
 //
 
 #import <AsyncDisplayKit/ASNetworkImageLoadInfo.h>
+#import <AsyncDisplayKit/ASNetworkImageLoadInfo+Private.h>
 
 @implementation ASNetworkImageLoadInfo
 

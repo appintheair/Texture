@@ -64,14 +64,13 @@
 #pragma mark -
 #pragma mark ASPagerNode.
 
-- (ASCellNodeBlock)pagerNode:(ASPagerNode *)pagerNode nodeBlockAtIndex:(NSInteger)index {
+- (ASCellNode *)pagerNode:(ASPagerNode *)pagerNode nodeAtIndex:(NSInteger)index
+{
   CGSize boundsSize = pagerNode.bounds.size;
   CGSize gradientRowSize = CGSizeMake(boundsSize.width, 100);
-  return ^{
-    GradientTableNode *node = [[GradientTableNode alloc] initWithElementSize:gradientRowSize];
-    node.pageNumber = index;
-    return node;
-  };
+  GradientTableNode *node = [[GradientTableNode alloc] initWithElementSize:gradientRowSize];
+  node.pageNumber = index;
+  return node;
 }
 
 - (ASSizeRange)pagerNode:(ASPagerNode *)pagerNode constrainedSizeForNodeAtIndex:(NSInteger)index;

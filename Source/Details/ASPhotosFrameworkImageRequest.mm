@@ -11,6 +11,8 @@
 
 #if AS_USE_PHOTOS
 
+#import <AsyncDisplayKit/ASBaseDefines.h>
+
 NSString *const ASPhotosURLScheme = @"ph";
 
 static NSString *const _ASPhotosURLQueryKeyWidth = @"width";

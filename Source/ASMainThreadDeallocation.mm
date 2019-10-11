@@ -8,10 +8,14 @@
 
 #import <AsyncDisplayKit/ASMainThreadDeallocation.h>
 
+#import <AsyncDisplayKit/ASBaseDefines.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASLog.h>
 #import <AsyncDisplayKit/ASThread.h>
+
+#import <objc/runtime.h>
+#import <UIKit/UIKit.h>
 
 @implementation NSObject (ASMainThreadIvarTeardown)
 
@@ -38,7 +42,7 @@
     }
     
     if ([object_getClass(value) needsMainThreadDeallocation]) {
-      os_log_debug(ASMainThreadDeallocationLog(), "%@: Trampolining ivar '%s' value %@ for main deallocation.", self, ivar_getName(ivar), value);
+      as_log_debug(ASMainThreadDeallocationLog(), "%@: Trampolining ivar '%s' value %@ for main deallocation.", self, ivar_getName(ivar), value);
       
       // Release the ivar's reference before handing the object to the queue so we
       // don't risk holding onto it longer than the queue does.
@@ -46,7 +50,7 @@
       
       ASPerformMainThreadDeallocation(&value);
     } else {
-      os_log_debug(ASMainThreadDeallocationLog(), "%@: Not trampolining ivar '%s' value %@.", self, ivar_getName(ivar), value);
+      as_log_debug(ASMainThreadDeallocationLog(), "%@: Not trampolining ivar '%s' value %@.", self, ivar_getName(ivar), value);
     }
   }
 }
@@ -138,7 +142,7 @@
 
 + (BOOL)needsMainThreadDeallocation
 {
-  const auto name = class_getName(self);
+  let name = class_getName(self);
   if (0 == strncmp(name, "AV", 2) || 0 == strncmp(name, "UI", 2) || 0 == strncmp(name, "CA", 2)) {
     return YES;
   }

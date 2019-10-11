@@ -10,10 +10,7 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
 #import <FBSnapshotTestCase/FBSnapshotTestController.h>
-#pragma clang diagnostic pop
 
 #import <AsyncDisplayKit/ASTextKitAttributes.h>
 

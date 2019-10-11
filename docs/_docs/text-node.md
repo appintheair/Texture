@@ -87,7 +87,6 @@ NSMutableAttributedString *string = [[NSMutableAttributedString alloc] initWithS
                       }
               range:[blurb rangeOfString:@"placekitten.com"]];
 _textNode.attributedText = string;
-_textNode.userInteractionEnabled = YES;
 </pre>
 
 <pre lang="swift" class = "swiftCode hidden">
@@ -103,7 +102,6 @@ attributedString.addAttributes([kLinkAttributeName: NSURL(string: "http://placek
                       NSUnderlineStyleAttributeName: (NSUnderlineStyle.styleSingle.rawValue | NSUnderlineStyle.patternDashDot.rawValue)],
                      range: blurb.range(of: "placekitten.com"))
 textNode.attributedText = attributedString
-textNode.isUserInteractionEnabled = true
 </pre>
 </div>
 </div>

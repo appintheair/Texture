@@ -27,6 +27,8 @@ build
 timeline.xctimeline
 playground.xcworkspace
 
-# Carthage
-Carthage/Checkouts
-Carthage/Build
+# Buck
+/buck-out
+/.buckconfig.local
+/.buckd
+

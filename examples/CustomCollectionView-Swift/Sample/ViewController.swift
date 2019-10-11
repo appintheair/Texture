@@ -40,7 +40,7 @@ class ViewController: ASViewController<ASCollectionNode>, MosaicCollectionViewLa
     _collectionNode.dataSource = self
     _collectionNode.delegate = self
     _collectionNode.layoutInspector = _layoutInspector
-    _collectionNode.registerSupplementaryNode(ofKind: UICollectionView.elementKindSectionHeader)
+    _collectionNode.registerSupplementaryNode(ofKind: UICollectionElementKindSectionHeader)
   }
   
   required init?(coder aDecoder: NSCoder) {
@@ -52,18 +52,16 @@ class ViewController: ASViewController<ASCollectionNode>, MosaicCollectionViewLa
     _collectionNode.view.isScrollEnabled = true
   }
 
-  func collectionNode(_ collectionNode: ASCollectionNode, nodeBlockForItemAt indexPath: IndexPath) -> ASCellNodeBlock {
+  func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
     let image = _sections[indexPath.section][indexPath.item]
-    return {
-      return ImageCellNode(with: image)
-    }
+    return ImageCellNode(with: image)
   }
   
   
   func collectionNode(_ collectionNode: ASCollectionNode, nodeForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> ASCellNode {
     let textAttributes : NSDictionary = [
-      convertFromNSAttributedStringKey(NSAttributedString.Key.font): UIFont.preferredFont(forTextStyle: UIFont.TextStyle.headline),
-      convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): UIColor.gray
+      NSFontAttributeName: UIFont.preferredFont(forTextStyle: UIFontTextStyle.headline),
+      NSForegroundColorAttributeName: UIColor.gray
     ]
     let textInsets = UIEdgeInsets(top: 11, left: 0, bottom: 11, right: 0)
     let textCellNode = ASTextCellNode(attributes: textAttributes as! [AnyHashable : Any], insets: textInsets)
@@ -85,8 +83,3 @@ class ViewController: ASViewController<ASCollectionNode>, MosaicCollectionViewLa
   }
 }
 
-
-// Helper function inserted by Swift 4.2 migrator.
-fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
-	return input.rawValue
-}

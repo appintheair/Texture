@@ -14,6 +14,8 @@
 #import "WindowWithStatusBarUnderlay.h"
 #import "Utilities.h"
 
+#import <AsyncDisplayKit/ASGraphicsContext.h>
+
 #define WEAVER 0
 
 #if WEAVER

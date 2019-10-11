@@ -17,6 +17,8 @@
 #import <AsyncDisplayKit/ASTextKitShadower.h>
 #import <AsyncDisplayKit/ASTextKitTailTruncater.h>
 #import <AsyncDisplayKit/ASTextKitFontSizeAdjuster.h>
+#import <AsyncDisplayKit/ASInternalHelpers.h>
+#import <AsyncDisplayKit/ASRunLoopQueue.h>
 
 //#define LOG(...) NSLog(__VA_ARGS__)
 #define LOG(...)
@@ -59,7 +61,6 @@ static NSCharacterSet *_defaultAvoidTruncationCharacterSet()
     CGSize shadowConstrainedSize = [[self shadower] insetSizeWithConstrainedSize:_constrainedSize];
     
     _context = [[ASTextKitContext alloc] initWithAttributedString:attributes.attributedString
-                                                        tintColor:attributes.tintColor
                                                     lineBreakMode:attributes.lineBreakMode
                                              maximumNumberOfLines:attributes.maximumNumberOfLines
                                                    exclusionPaths:attributes.exclusionPaths

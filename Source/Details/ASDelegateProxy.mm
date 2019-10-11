@@ -10,20 +10,7 @@
 #import <AsyncDisplayKit/ASDelegateProxy.h>
 #import <AsyncDisplayKit/ASTableNode.h>
 #import <AsyncDisplayKit/ASCollectionNode.h>
-
-// UIKit performs a class check for UIDataSourceModelAssociation protocol conformance rather than an instance check, so
-//  the implementation of conformsToProtocol: below never gets called. We need to declare the two as conforming to the protocol here, then
-//  we need to implement dummy methods to get rid of a compiler warning about not conforming to the protocol.
-@interface ASTableViewProxy () <UIDataSourceModelAssociation>
-@end
-
-@interface ASCollectionViewProxy () <UIDataSourceModelAssociation>
-@end
-
-@interface ASDelegateProxy (UIDataSourceModelAssociationPrivate)
-- (nullable NSString *)_modelIdentifierForElementAtIndexPath:(NSIndexPath *)indexPath inView:(UIView *)view;
-- (nullable NSIndexPath *)_indexPathForElementWithModelIdentifier:(NSString *)identifier inView:(UIView *)view;
-@end
+#import <AsyncDisplayKit/ASAssert.h>
 
 @implementation ASTableViewProxy
 
@@ -67,20 +54,8 @@
           
           // used for batch fetching API
           selector == @selector(scrollViewWillEndDragging:withVelocity:targetContentOffset:) ||
-          selector == @selector(scrollViewDidEndDecelerating:) ||
-
-          // UIDataSourceModelAssociation
-          selector == @selector(modelIdentifierForElementAtIndexPath:inView:) ||
-          selector == @selector(indexPathForElementWithModelIdentifier:inView:)
+          selector == @selector(scrollViewDidEndDecelerating:)
           );
-}
-
-- (nullable NSString *)modelIdentifierForElementAtIndexPath:(NSIndexPath *)indexPath inView:(UIView *)view {
-  return [self _modelIdentifierForElementAtIndexPath:indexPath inView:view];
-}
-
-- (nullable NSIndexPath *)indexPathForElementWithModelIdentifier:(NSString *)identifier inView:(UIView *)view {
-  return [self _indexPathForElementWithModelIdentifier:identifier inView:view];
 }
 
 @end
@@ -135,20 +110,8 @@
           
           // intercepted due to not being supported by ASCollectionView (prevent bugs caused by usage)
           selector == @selector(collectionView:canMoveItemAtIndexPath:) ||
-          selector == @selector(collectionView:moveItemAtIndexPath:toIndexPath:) ||
-
-          // UIDataSourceModelAssociation
-          selector == @selector(modelIdentifierForElementAtIndexPath:inView:) ||
-          selector == @selector(indexPathForElementWithModelIdentifier:inView:)
+          selector == @selector(collectionView:moveItemAtIndexPath:toIndexPath:)
           );
-}
-
-- (nullable NSString *)modelIdentifierForElementAtIndexPath:(NSIndexPath *)indexPath inView:(UIView *)view {
-  return [self _modelIdentifierForElementAtIndexPath:indexPath inView:view];
-}
-
-- (nullable NSIndexPath *)indexPathForElementWithModelIdentifier:(NSString *)identifier inView:(UIView *)view {
-  return [self _indexPathForElementWithModelIdentifier:identifier inView:view];
 }
 
 @end
@@ -255,14 +218,6 @@
 {
   ASDisplayNodeAssert(NO, @"This method must be overridden by subclasses.");
   return NO;
-}
-
-- (nullable NSString *)_modelIdentifierForElementAtIndexPath:(NSIndexPath *)indexPath inView:(UIView *)view {
-  return [(id)_interceptor modelIdentifierForElementAtIndexPath:indexPath inView:view];
-}
-
-- (nullable NSIndexPath *)_indexPathForElementWithModelIdentifier:(NSString *)identifier inView:(UIView *)view {
-  return [(id)_interceptor indexPathForElementWithModelIdentifier:identifier inView:view];
 }
 
 @end

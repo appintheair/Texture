@@ -10,16 +10,17 @@
 #import <AsyncDisplayKit/ASAvailability.h>
 #import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASLog.h>
+#import <AsyncDisplayKit/ASObjectDescriptionHelpers.h>
 #import <AsyncDisplayKit/ASRunLoopQueue.h>
 #import <AsyncDisplayKit/ASThread.h>
 #import <AsyncDisplayKit/ASSignpost.h>
+#import <QuartzCore/QuartzCore.h>
+#import <cstdlib>
 #import <deque>
 #import <vector>
 
 #define ASRunLoopQueueLoggingEnabled 0
 #define ASRunLoopQueueVerboseLoggingEnabled 0
-
-using AS::MutexLocker;
 
 static void runLoopSourceCallback(void *info) {
   // No-op
@@ -32,7 +33,7 @@ static void runLoopSourceCallback(void *info) {
 
 @implementation ASDeallocQueue {
   std::vector<CFTypeRef> _queue;
-  AS::Mutex _lock;
+  ASDN::Mutex _lock;
 }
 
 + (ASDeallocQueue *)sharedDeallocationQueue NS_RETURNS_RETAINED
@@ -55,13 +56,13 @@ static void runLoopSourceCallback(void *info) {
   NSParameterAssert(objectPtr != NULL);
   
   // Cast to CFType so we can manipulate retain count manually.
-  const auto cfPtr = (CFTypeRef *)(void *)objectPtr;
+  let cfPtr = (CFTypeRef *)(void *)objectPtr;
   if (!cfPtr || !*cfPtr) {
     return;
   }
   
   _lock.lock();
-  const auto isFirstEntry = _queue.empty();
+  let isFirstEntry = _queue.empty();
   // Push the pointer into our queue and clear their pointer.
   // This "steals" the +1 from ARC and nils their pointer so they can't
   // access or release the object.
@@ -79,9 +80,9 @@ static void runLoopSourceCallback(void *info) {
 - (void)drain
 {
   _lock.lock();
-  const auto q = std::move(_queue);
+  let q = std::move(_queue);
   _lock.unlock();
-  for (CFTypeRef ref : q) {
+  for (let ref : q) {
     // NOTE: Could check that retain count is 1 and retry later if not.
     CFRelease(ref);
   }
@@ -110,7 +111,7 @@ static void runLoopSourceCallback(void *info) {
   CFRunLoopSourceRef _runLoopSource;
   CFRunLoopObserverRef _runLoopObserver;
   NSPointerArray *_internalQueue; // Use NSPointerArray so we can decide __strong or __weak per-instance.
-  AS::RecursiveMutex _internalQueueLock;
+  ASDN::RecursiveMutex _internalQueueLock;
 
   // In order to not pollute the top-level activities, each queue has 1 root activity.
   os_activity_t _rootActivity;
@@ -146,8 +147,8 @@ static void runLoopSourceCallback(void *info) {
     }
     
     // Self is guaranteed to outlive the observer.  Without the high cost of a weak pointer,
-    // unowned(__unsafe_unretained) allows us to avoid flagging the memory cycle detector.
-    unowned __typeof__(self) weakSelf = self;
+    // __unsafe_unretained allows us to avoid flagging the memory cycle detector.
+    __unsafe_unretained __typeof__(self) weakSelf = self;
     void (^handlerBlock) (CFRunLoopObserverRef observer, CFRunLoopActivity activity) = ^(CFRunLoopObserverRef observer, CFRunLoopActivity activity) {
       [weakSelf processQueue];
     };
@@ -204,7 +205,7 @@ static void runLoopSourceCallback(void *info) {
 
   BOOL isQueueDrained = NO;
   {
-    MutexLocker l(_internalQueueLock);
+    ASDN::MutexLocker l(_internalQueueLock);
 
     NSInteger internalQueueCount = _internalQueue.count;
     // Early-exit if the queue is empty.
@@ -212,7 +213,7 @@ static void runLoopSourceCallback(void *info) {
       return;
     }
 
-    ASSignpostStart(RunLoopQueueBatch, self, "%s", object_getClassName(self));
+    ASSignpostStart(ASSignpostRunLoopQueueBatch);
 
     // Snatch the next batch of items.
     NSInteger maxCountToProcess = MIN(internalQueueCount, self.batchSize);
@@ -230,7 +231,7 @@ static void runLoopSourceCallback(void *info) {
        * object will be added to the autorelease pool. If the queue is strong,
        * it will retain the object until we transfer it (retain it) in itemsToProcess.
        */
-      unowned id ptr = (__bridge id)[_internalQueue pointerAtIndex:i];
+      __unsafe_unretained id ptr = (__bridge id)[_internalQueue pointerAtIndex:i];
       if (ptr != nil) {
         foundItemCount++;
         if (hasExecutionBlock) {
@@ -255,12 +256,12 @@ static void runLoopSourceCallback(void *info) {
   }
 
   // itemsToProcess will be empty if _queueConsumer == nil so no need to check again.
-  const auto count = itemsToProcess.size();
+  let count = itemsToProcess.size();
   if (count > 0) {
     as_activity_scope_verbose(as_activity_create("Process run loop queue batch", _rootActivity, OS_ACTIVITY_FLAG_DEFAULT));
-    const auto itemsEnd = itemsToProcess.cend();
-    for (auto iterator = itemsToProcess.begin(); iterator < itemsEnd; iterator++) {
-      unowned id value = *iterator;
+    let itemsEnd = itemsToProcess.cend();
+    for (var iterator = itemsToProcess.begin(); iterator < itemsEnd; iterator++) {
+      __unsafe_unretained id value = *iterator;
       _queueConsumer(value, isQueueDrained && iterator == itemsEnd - 1);
       as_log_verbose(ASDisplayLog(), "processed %@", value);
     }
@@ -275,7 +276,7 @@ static void runLoopSourceCallback(void *info) {
     CFRunLoopWakeUp(_runLoop);
   }
   
-  ASSignpostEnd(RunLoopQueueBatch, self, "count: %d", (int)count);
+  ASSignpostEnd(ASSignpostRunLoopQueueBatch);
 }
 
 - (void)enqueue:(id)object
@@ -284,7 +285,7 @@ static void runLoopSourceCallback(void *info) {
     return;
   }
   
-  MutexLocker l(_internalQueueLock);
+  ASDN::MutexLocker l(_internalQueueLock);
 
   // Check if the object exists.
   BOOL foundObject = NO;
@@ -300,16 +301,15 @@ static void runLoopSourceCallback(void *info) {
 
   if (!foundObject) {
     [_internalQueue addPointer:(__bridge void *)object];
-    if (_internalQueue.count == 1) {
-      CFRunLoopSourceSignal(_runLoopSource);
-      CFRunLoopWakeUp(_runLoop);
-    }
+
+    CFRunLoopSourceSignal(_runLoopSource);
+    CFRunLoopWakeUp(_runLoop);
   }
 }
 
 - (BOOL)isEmpty
 {
-  MutexLocker l(_internalQueueLock);
+  ASDN::MutexLocker l(_internalQueueLock);
   return _internalQueue.count == 0;
 }
 
@@ -320,20 +320,11 @@ ASSynthesizeLockingMethodsWithMutex(_internalQueueLock)
 #pragma mark - ASCATransactionQueue
 
 @interface ASCATransactionQueue () {
+  CFRunLoopRef _runLoop;
   CFRunLoopSourceRef _runLoopSource;
   CFRunLoopObserverRef _preTransactionObserver;
-  
-  // Current buffer for new entries, only accessed from within its mutex.
-  std::vector<id<ASCATransactionQueueObserving>> _internalQueue;
-  
-  // No retain, no release, pointer hash, pointer equality.
-  // Enforce uniqueness in our queue. std::unordered_set does a heap allocation for each entry – not good.
-  CFMutableSetRef _internalQueueHashSet;
-  
-  // Temporary buffer, only accessed from the main thread in -process.
-  std::vector<id<ASCATransactionQueueObserving>> _batchBuffer;
-  
-  AS::Mutex _internalQueueLock;
+  NSPointerArray *_internalQueue;
+  ASDN::RecursiveMutex _internalQueueLock;
 
   // In order to not pollute the top-level activities, each queue has 1 root activity.
   os_activity_t _rootActivity;
@@ -351,19 +342,22 @@ ASSynthesizeLockingMethodsWithMutex(_internalQueueLock)
 // but after most other scheduled work on the runloop has processed.
 static int const kASASCATransactionQueueOrder = 1000000;
 
-ASCATransactionQueue *_ASSharedCATransactionQueue;
-dispatch_once_t _ASSharedCATransactionQueueOnceToken;
++ (ASCATransactionQueue *)sharedQueue NS_RETURNS_RETAINED
+{
+  static dispatch_once_t onceToken;
+  static ASCATransactionQueue *sharedQueue;
+  dispatch_once(&onceToken, ^{
+    sharedQueue = [[ASCATransactionQueue alloc] init];
+  });
+  return sharedQueue;
+}
 
 - (instancetype)init
 {
   if (self = [super init]) {
-    _internalQueueHashSet = CFSetCreateMutable(NULL, 0, NULL);
-    
-    // This is going to be a very busy queue – every node in the preload range will enter this queue.
-    // Save some time on first render by reserving space up front.
-    static constexpr int kInternalQueueInitialCapacity = 64;
-    _internalQueue.reserve(kInternalQueueInitialCapacity);
-    _batchBuffer.reserve(kInternalQueueInitialCapacity);
+    _runLoop = CFRunLoopGetMain();
+    NSPointerFunctionsOptions options = NSPointerFunctionsStrongMemory;
+    _internalQueue = [[NSPointerArray alloc] initWithOptions:options];
 
     // We don't want to pollute the top-level app activities with run loop batches, so we create one top-level
     // activity per queue, and each batch activity joins that one instead.
@@ -375,15 +369,16 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
     }
 
     // Self is guaranteed to outlive the observer.  Without the high cost of a weak pointer,
-    // unowned(__unsafe_unretained) allows us to avoid flagging the memory cycle detector.
-    unowned __typeof__(self) weakSelf = self;
-    _preTransactionObserver = CFRunLoopObserverCreateWithHandler(NULL, kCFRunLoopBeforeWaiting, true, kASASCATransactionQueueOrder, ^(CFRunLoopObserverRef observer, CFRunLoopActivity activity) {
-      while (!weakSelf->_internalQueue.empty()) {
-        [weakSelf processQueue];
+    // __unsafe_unretained allows us to avoid flagging the memory cycle detector.
+    __unsafe_unretained __typeof__(self) weakSelf = self;
+    void (^handlerBlock) (CFRunLoopObserverRef observer, CFRunLoopActivity activity) = ^(CFRunLoopObserverRef observer, CFRunLoopActivity activity) {
+      while (weakSelf->_internalQueue.count > 0) {
+      [weakSelf processQueue];
       }
-    });
+    };
+    _preTransactionObserver = CFRunLoopObserverCreateWithHandler(NULL, kCFRunLoopBeforeWaiting, true, kASASCATransactionQueueOrder, handlerBlock);
 
-    CFRunLoopAddObserver(CFRunLoopGetMain(), _preTransactionObserver, kCFRunLoopCommonModes);
+    CFRunLoopAddObserver(_runLoop, _preTransactionObserver,  kCFRunLoopCommonModes);
 
     // It is not guaranteed that the runloop will turn if it has no scheduled work, and this causes processing of
     // the queue to stop. Attaching a custom loop source to the run loop and signal it if new work needs to be done
@@ -393,7 +388,7 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
     sourceContext.info = (__bridge void *)self;
 #endif
     _runLoopSource = CFRunLoopSourceCreate(NULL, 0, &sourceContext);
-    CFRunLoopAddSource(CFRunLoopGetMain(), _runLoopSource, kCFRunLoopCommonModes);
+    CFRunLoopAddSource(_runLoop, _runLoopSource, kCFRunLoopCommonModes);
 
 #if ASRunLoopQueueLoggingEnabled
     _runloopQueueLoggingTimer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(checkRunLoop) userInfo:nil repeats:YES];
@@ -405,10 +400,7 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
 
 - (void)dealloc
 {
-  ASDisplayNodeAssertMainThread();
-
-  CFRelease(_internalQueueHashSet);
-  CFRunLoopRemoveSource(CFRunLoopGetMain(), _runLoopSource, kCFRunLoopCommonModes);
+  CFRunLoopRemoveSource(_runLoop, _runLoopSource, kCFRunLoopCommonModes);
   CFRelease(_runLoopSource);
   _runLoopSource = nil;
 
@@ -428,31 +420,61 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
 
 - (void)processQueue
 {
-  ASDisplayNodeAssertMainThread();
+  // If we have an execution block, this vector will be populated, otherwise remains empty.
+  // This is to avoid needlessly retaining/releasing the objects if we don't have a block.
+  std::vector<id> itemsToProcess;
 
-  AS::UniqueLock l(_internalQueueLock);
-  NSInteger count = _internalQueue.size();
-  // Early-exit if the queue is empty.
-  if (count == 0) {
-    return;
+  {
+    ASDN::MutexLocker l(_internalQueueLock);
+
+    NSInteger internalQueueCount = _internalQueue.count;
+    // Early-exit if the queue is empty.
+    if (internalQueueCount == 0) {
+      return;
+    }
+
+    ASSignpostStart(ASSignpostRunLoopQueueBatch);
+
+    /**
+     * For each item in the next batch, if it's non-nil then NULL it out
+     * and if we have an execution block then add it in.
+     * This could be written a bunch of different ways but
+     * this particular one nicely balances readability, safety, and efficiency.
+     */
+    NSInteger foundItemCount = 0;
+    for (NSInteger i = 0; i < internalQueueCount && foundItemCount < internalQueueCount; i++) {
+      /**
+       * It is safe to use unsafe_unretained here. If the queue is weak, the
+       * object will be added to the autorelease pool. If the queue is strong,
+       * it will retain the object until we transfer it (retain it) in itemsToProcess.
+       */
+      __unsafe_unretained id ptr = (__bridge id)[_internalQueue pointerAtIndex:i];
+      if (ptr != nil) {
+        foundItemCount++;
+        itemsToProcess.push_back(ptr);
+        [_internalQueue replacePointerAtIndex:i withPointer:NULL];
+      }
+    }
+
+    [_internalQueue compact];
   }
-  as_activity_scope_verbose(as_activity_create("Process run loop queue batch", _rootActivity, OS_ACTIVITY_FLAG_DEFAULT));
-  ASSignpostStart(RunLoopQueueBatch, self, "CATransactionQueue");
-  
-  // Swap buffers, clear our hash table.
-  _internalQueue.swap(_batchBuffer);
-  CFSetRemoveAllValues(_internalQueueHashSet);
-  
-  // Unlock early. We are done with internal queue, and batch buffer is main-thread-only so no lock.
-  l.unlock();
-  
-  for (const id<ASCATransactionQueueObserving> &value : _batchBuffer) {
-    [value prepareForCATransactionCommit];
-    as_log_verbose(ASDisplayLog(), "processed %@", value);
+
+  // itemsToProcess will be empty if _queueConsumer == nil so no need to check again.
+  let count = itemsToProcess.size();
+  if (count > 0) {
+    as_activity_scope_verbose(as_activity_create("Process run loop queue batch", _rootActivity, OS_ACTIVITY_FLAG_DEFAULT));
+    let itemsEnd = itemsToProcess.cend();
+    for (var iterator = itemsToProcess.begin(); iterator < itemsEnd; iterator++) {
+      __unsafe_unretained id value = *iterator;
+      [value prepareForCATransactionCommit];
+      as_log_verbose(ASDisplayLog(), "processed %@", value);
+    }
+    if (count > 1) {
+      as_log_verbose(ASDisplayLog(), "processed %lu items", (unsigned long)count);
+    }
   }
-  _batchBuffer.clear();
-  as_log_verbose(ASDisplayLog(), "processed %lu items", (unsigned long)count);
-  ASSignpostEnd(RunLoopQueueBatch, self, "count: %d", (int)count);
+
+  ASSignpostEnd(ASSignpostRunLoopQueueBatch);
 }
 
 - (void)enqueue:(id<ASCATransactionQueueObserving>)object
@@ -466,22 +488,30 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
     return;
   }
 
-  MutexLocker l(_internalQueueLock);
-  if (CFSetContainsValue(_internalQueueHashSet, (__bridge void *)object)) {
-    return;
+  ASDN::MutexLocker l(_internalQueueLock);
+
+  // Check if the object exists.
+  BOOL foundObject = NO;
+
+  for (id currentObject in _internalQueue) {
+    if (currentObject == object) {
+      foundObject = YES;
+      break;
+    }
   }
-  CFSetAddValue(_internalQueueHashSet, (__bridge void *)object);
-  _internalQueue.emplace_back(object);
-  if (_internalQueue.size() == 1) {
+
+  if (!foundObject) {
+    [_internalQueue addPointer:(__bridge void *)object];
+
     CFRunLoopSourceSignal(_runLoopSource);
-    CFRunLoopWakeUp(CFRunLoopGetMain());
+    CFRunLoopWakeUp(_runLoop);
   }
 }
 
 - (BOOL)isEmpty
 {
-  MutexLocker l(_internalQueueLock);
-  return _internalQueue.empty();
+  ASDN::MutexLocker l(_internalQueueLock);
+  return _internalQueue.count == 0;
 }
 
 - (BOOL)isEnabled

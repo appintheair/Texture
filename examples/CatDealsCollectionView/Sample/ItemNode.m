@@ -8,8 +8,6 @@
 //
 
 #import "ItemNode.h"
-
-#import "ASDisplayNode+CatDeals.h"
 #import "ItemStyles.h"
 #import "PlaceholderNetworkImageNode.h"
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
@@ -73,7 +71,6 @@ const CGFloat kSoldOutGBHeight = 50.0;
 {
   [super setNodeModel:nodeModel];
   
-  self.catsLoggingID = [NSString stringWithFormat:@"CatDeal#%ld", (long)nodeModel.identifier];
   [self updateLabels];
   [self updateAccessibilityIdentifier];
 }

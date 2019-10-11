@@ -40,8 +40,9 @@ typedef struct {
   UIUserInterfaceIdiom userInterfaceIdiom;
   UIForceTouchCapability forceTouchCapability;
   UITraitEnvironmentLayoutDirection layoutDirection API_AVAILABLE(ios(10.0));
+#if AS_BUILD_UIUSERINTERFACESTYLE
   UIUserInterfaceStyle userInterfaceStyle API_AVAILABLE(tvos(10.0), ios(12.0));
-
+#endif
 
   // NOTE: This must be a constant. We will assert.
   unowned UIContentSizeCategory preferredContentSizeCategory API_AVAILABLE(ios(10.0));
@@ -59,11 +60,6 @@ AS_EXTERN ASPrimitiveTraitCollection ASPrimitiveTraitCollectionMakeDefault(void)
  * Creates a ASPrimitiveTraitCollection from a given UITraitCollection.
  */
 AS_EXTERN ASPrimitiveTraitCollection ASPrimitiveTraitCollectionFromUITraitCollection(UITraitCollection *traitCollection);
-
-/**
- * Creates a UITraitCollection from a given ASPrimitiveTraitCollection.
- */
-AS_EXTERN UITraitCollection * ASPrimitiveTraitCollectionToUITraitCollection(ASPrimitiveTraitCollection traitCollection);
 
 
 /**
@@ -110,10 +106,20 @@ AS_EXTERN void ASTraitCollectionPropagateDown(id<ASLayoutElement> element, ASPri
 
 @end
 
+#define ASPrimitiveTraitCollectionDefaults \
+- (ASPrimitiveTraitCollection)primitiveTraitCollection\
+{\
+  return _primitiveTraitCollection.load();\
+}\
+- (void)setPrimitiveTraitCollection:(ASPrimitiveTraitCollection)traitCollection\
+{\
+  _primitiveTraitCollection = traitCollection;\
+}\
+
 #define ASLayoutElementCollectionTableSetTraitCollection(lock) \
 - (void)setPrimitiveTraitCollection:(ASPrimitiveTraitCollection)traitCollection\
 {\
-  AS::MutexLocker l(lock);\
+  ASDN::MutexLocker l(lock);\
 \
   ASPrimitiveTraitCollection oldTraits = self.primitiveTraitCollection;\
   [super setPrimitiveTraitCollection:traitCollection];\
@@ -143,7 +149,9 @@ AS_SUBCLASSING_RESTRICTED
 @property (readonly) UIUserInterfaceIdiom userInterfaceIdiom;
 @property (readonly) UIForceTouchCapability forceTouchCapability;
 @property (readonly) UITraitEnvironmentLayoutDirection layoutDirection API_AVAILABLE(ios(10.0));
+#if AS_BUILD_UIUSERINTERFACESTYLE
 @property (readonly) UIUserInterfaceStyle userInterfaceStyle API_AVAILABLE(tvos(10.0), ios(12.0));
+#endif
 @property (readonly) UIContentSizeCategory preferredContentSizeCategory  API_AVAILABLE(ios(10.0));
 
 @property (readonly) CGSize containerSize;

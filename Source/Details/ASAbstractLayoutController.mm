@@ -89,7 +89,7 @@ CGRect CGRectExpandToRangeWithScrollableDirections(CGRect rect, ASRangeTuningPar
 
 + (std::vector<std::vector<ASRangeTuningParameters>>)defaultTuningParameters
 {
-  auto tuningParameters = std::vector<std::vector<ASRangeTuningParameters>> (ASLayoutRangeModeCount, std::vector<ASRangeTuningParameters> (ASLayoutRangeTypeCount));
+  var tuningParameters = std::vector<std::vector<ASRangeTuningParameters>> (ASLayoutRangeModeCount, std::vector<ASRangeTuningParameters> (ASLayoutRangeTypeCount));
 
   tuningParameters[ASLayoutRangeModeFull][ASLayoutRangeTypeDisplay] = {
     .leadingBufferScreenfuls = 1.0,

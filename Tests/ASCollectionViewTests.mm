@@ -16,9 +16,7 @@
 #import <OCMock/OCMock.h>
 #import <AsyncDisplayKit/ASCollectionView+Undeprecated.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
-
 #import "ASDisplayNodeTestsHelper.h"
-#import "ASTestCase.h"
 
 @interface ASTextCellNodeWithSetSelectedCounter : ASTextCellNode
 
@@ -165,22 +163,15 @@
 @interface ASCollectionView (InternalTesting)
 
 - (NSArray<NSString *> *)dataController:(ASDataController *)dataController supplementaryNodeKindsInSections:(NSIndexSet *)sections;
+- (BOOL)dataController:(ASDataController *)dataController shouldSynchronouslyProcessChangeSet:(_ASHierarchyChangeSet *)changeSet;
 
 @end
 
-@interface ASCollectionViewTests : ASTestCase
+@interface ASCollectionViewTests : XCTestCase
 
 @end
 
 @implementation ASCollectionViewTests
-
-- (void)setUp
-{
-  [super setUp];
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalOptimizeDataControllerPipeline;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-}
 
 - (void)tearDown
 {
@@ -1056,18 +1047,15 @@
 
 - (void)testInitialRangeBounds
 {
-  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeNone
-           shouldWaitUntilAllUpdatesAreProcessed:YES];
+  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeNone];
 }
 
 - (void)testInitialRangeBoundsCellLayoutModeAlwaysAsync
 {
-  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeAlwaysAsync
-           shouldWaitUntilAllUpdatesAreProcessed:YES];
+  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeAlwaysAsync];
 }
 
 - (void)testInitialRangeBoundsWithCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-           shouldWaitUntilAllUpdatesAreProcessed:(BOOL)shouldWait
 {
   UIWindow *window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   ASCollectionViewTestController *testController = [[ASCollectionViewTestController alloc] initWithNibName:nil bundle:nil];
@@ -1083,7 +1071,9 @@
   // Trigger the initial reload to start 
   [window layoutIfNeeded];
 
-  if (shouldWait) {
+  // Test the APIs that monitor ASCollectionNode update handling if collection node should
+  // layout asynchronously
+  if (![cn.view dataController:nil shouldSynchronouslyProcessChangeSet:nil]) {
     XCTAssertTrue(cn.isProcessingUpdates, @"ASCollectionNode should still be processing updates after initial layoutIfNeeded call (reloadData)");
 
     [cn onDidFinishProcessingUpdates:^{
@@ -1151,31 +1141,6 @@
     }
   }
 }
-
-- (void)testASPrimitiveTraitCollectionToUITraitCollection {
-  ASPrimitiveTraitCollection collection = ASPrimitiveTraitCollectionMakeDefault();
-  collection.displayGamut = UIDisplayGamutSRGB;
-  collection.displayScale = 11;
-  collection.forceTouchCapability = UIForceTouchCapabilityAvailable;
-  collection.horizontalSizeClass = UIUserInterfaceSizeClassRegular;
-  collection.layoutDirection = UITraitEnvironmentLayoutDirectionRightToLeft;
-  collection.preferredContentSizeCategory = UIContentSizeCategoryMedium;
-  collection.userInterfaceIdiom = UIUserInterfaceIdiomTV;
-  if (@available(iOS 12.0, *)) {
-    collection.userInterfaceStyle = UIUserInterfaceStyleDark;
-  }
-  collection.verticalSizeClass = UIUserInterfaceSizeClassRegular;
-  
-  // create `UITraitCollection` from `ASPrimitiveTraitCollection`
-  UITraitCollection *uiCollection = ASPrimitiveTraitCollectionToUITraitCollection(collection);
-  
-  // now convert it back to `ASPrimitiveTraitCollection`
-  ASPrimitiveTraitCollection newCollection = ASPrimitiveTraitCollectionFromUITraitCollection(uiCollection);
-  
-  // compare
-  XCTAssert(ASPrimitiveTraitCollectionIsEqualToASPrimitiveTraitCollection(collection, newCollection));
-}
-
 
 /**
  * This tests an issue where, since subnode insertions aren't applied until the UIKit layout pass,

@@ -9,10 +9,11 @@
 
 #import <AsyncDisplayKit/AsyncDisplayKit+Debug.h>
 #import <AsyncDisplayKit/ASAbstractLayoutController.h>
+#import <AsyncDisplayKit/ASGraphicsContext.h>
 #import <AsyncDisplayKit/ASLayout.h>
+#import <AsyncDisplayKit/ASWeakSet.h>
 #import <AsyncDisplayKit/UIImage+ASConvenience.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
-#import <AsyncDisplayKit/ASGraphicsContext.h>
 #import <AsyncDisplayKit/CoreGraphics+ASConvenience.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASTextNode.h>
@@ -139,14 +140,16 @@ static BOOL __enableHitTestDebug = NO;
       UIColor *borderColor      = [[UIColor orangeColor] colorWithAlphaComponent:0.8];
       UIColor *clipsBorderColor = [UIColor colorWithRed:30/255.0 green:90/255.0 blue:50/255.0 alpha:0.7];
       CGRect imgRect            = CGRectMake(0, 0, 2.0 * borderWidth + 1.0, 2.0 * borderWidth + 1.0);
-
-      UIImage *debugHighlightImage = ASGraphicsCreateImageWithOptions(imgRect.size, NO, 1, nil, nil, ^{
-        [fillColor setFill];
-        UIRectFill(imgRect);
-
-        [self drawEdgeIfClippedWithEdges:clippedEdges color:clipsBorderColor borderWidth:borderWidth imgRect:imgRect];
-        [self drawEdgeIfClippedWithEdges:clipsToBoundsClippedEdges color:borderColor borderWidth:borderWidth imgRect:imgRect];
-      });
+      
+      ASGraphicsBeginImageContextWithOptions(imgRect.size, NO, 1);
+      
+      [fillColor setFill];
+      UIRectFill(imgRect);
+      
+      [self drawEdgeIfClippedWithEdges:clippedEdges color:clipsBorderColor borderWidth:borderWidth imgRect:imgRect];
+      [self drawEdgeIfClippedWithEdges:clipsToBoundsClippedEdges color:borderColor borderWidth:borderWidth imgRect:imgRect];
+      
+      UIImage *debugHighlightImage = ASGraphicsGetImageAndEndCurrentContext();
       
       UIEdgeInsets edgeInsets = UIEdgeInsetsMake(borderWidth, borderWidth, borderWidth, borderWidth);
       debugOverlay.image = [debugHighlightImage resizableImageWithCapInsets:edgeInsets resizingMode:UIImageResizingModeStretch];
@@ -454,10 +457,10 @@ static BOOL __shouldShowRangeDebugOverlay = NO;
   CGFloat leadingDisplayTuningRatio   = 0;
   CGFloat leadingPreloadTuningRatio   = 0;
 
-  if (displayTuningParameters.leadingBufferScreenfuls + displayTuningParameters.trailingBufferScreenfuls != 0) {
+  if (!((displayTuningParameters.leadingBufferScreenfuls + displayTuningParameters.trailingBufferScreenfuls) == 0)) {
     leadingDisplayTuningRatio = displayTuningParameters.leadingBufferScreenfuls / (displayTuningParameters.leadingBufferScreenfuls + displayTuningParameters.trailingBufferScreenfuls);
   }
-  if (preloadTuningParameters.leadingBufferScreenfuls + preloadTuningParameters.trailingBufferScreenfuls != 0) {
+  if (!((preloadTuningParameters.leadingBufferScreenfuls + preloadTuningParameters.trailingBufferScreenfuls) == 0)) {
     leadingPreloadTuningRatio = preloadTuningParameters.leadingBufferScreenfuls / (preloadTuningParameters.leadingBufferScreenfuls + preloadTuningParameters.trailingBufferScreenfuls);
   }
   

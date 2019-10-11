@@ -7,11 +7,8 @@
 //  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
-NS_ASSUME_NONNULL_BEGIN
-
 @interface UIColor (Additions)
 
-+ (UIColor *)backgroundColor;
 + (UIColor *)darkBlueColor;
 + (UIColor *)lightBlueColor;
 
@@ -19,8 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface UIImage (Additions)
 
++ (UIImage *)followingButtonStretchableImageForCornerRadius:(CGFloat)cornerRadius following:(BOOL)followingEnabled;
 + (void)downloadImageForURL:(NSURL *)url completion:(void (^)(UIImage *))block;
-- (UIImage *)makeCircularImageWithSize:(CGSize)size backgroundColor:(nullable UIColor *)backgroundColor;
+
+- (UIImage *)makeCircularImageWithSize:(CGSize)size;
 
 @end
 
@@ -35,9 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSAttributedString *)attributedStringWithString:(NSString *)string
                                           fontSize:(CGFloat)size
-                                             color:(nullable UIColor *)color
-                                    firstWordColor:(nullable UIColor *)firstWordColor;
+                                             color:(UIColor *)color
+                                    firstWordColor:(UIColor *)firstWordColor;
 
 @end
-
-NS_ASSUME_NONNULL_END

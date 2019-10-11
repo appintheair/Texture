@@ -12,6 +12,7 @@
 #import <tgmath.h>
 #import <numeric>
 
+#import <AsyncDisplayKit/ASDimension.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASLayoutSpecUtilities.h>
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>

@@ -35,6 +35,7 @@
   [[UINavigationBar appearance] setBarTintColor:[UIColor lighOrangeColor]];
   [[UINavigationBar appearance] setTranslucent:NO];
 
+  [application setStatusBarStyle:UIStatusBarStyleLightContent];
 
 
   return YES;

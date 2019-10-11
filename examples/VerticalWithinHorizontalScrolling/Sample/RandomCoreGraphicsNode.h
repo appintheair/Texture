@@ -10,7 +10,10 @@
 #import <AsyncDisplayKit/AsyncDisplayKit.h>
 
 @interface RandomCoreGraphicsNode : ASCellNode
+{
+  ASTextNode *_indexPathTextNode;
+}
 
-- (instancetype)initWithContent:(NSString *)content;
+@property NSIndexPath *indexPath;
 
 @end

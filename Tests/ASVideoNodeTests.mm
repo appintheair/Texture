@@ -17,7 +17,6 @@
 
 #import "ASDisplayNodeTestsHelper.h"
 
-#if AS_USE_VIDEO
 @interface ASVideoNodeTests : XCTestCase <ASVideoNodeDelegate>
 {
   ASVideoNode *_videoNode;
@@ -424,5 +423,3 @@
 }
 
 @end
-
-#endif

@@ -12,6 +12,7 @@
 #import <AsyncDisplayKit/ASCollections.h>
 #import <AsyncDisplayKit/ASLayout.h>
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
+#import <AsyncDisplayKit/ASLayoutSpecUtilities.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
 
 #pragma mark - ASAbsoluteLayoutSpec
@@ -80,7 +81,7 @@
     sublayout.position = layoutPosition;
     rawSublayouts[i++] = sublayout;
   }
-  const auto sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
+  let sublayouts = [NSArray<ASLayout *> arrayByTransferring:rawSublayouts count:i];
 
   if (_sizing == ASAbsoluteLayoutSpecSizingSizeToFit || isnan(size.width)) {
     size.width = constrainedSize.min.width;

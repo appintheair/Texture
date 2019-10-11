@@ -65,7 +65,6 @@
 
   // Calculate the bounding rectangle for the truncation message
   ASTextKitContext *truncationContext = [[ASTextKitContext alloc] initWithAttributedString:_truncationAttributedString
-                                                                                 tintColor:nil
                                                                              lineBreakMode:NSLineBreakByWordWrapping
                                                                       maximumNumberOfLines:1
                                                                             exclusionPaths:nil
